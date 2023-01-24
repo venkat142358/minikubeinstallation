@@ -1,0 +1,76 @@
+sudo apt-get update
+# installin Kubectl 
+curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+mv kubectl /bin/kubectl
+chmod a+x /bin/kubectl
+
+# Install docker 
+sudo apt-het update && sudo apt-get install docker.io -y
+
+#installing minikube  
+curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+sudo install minikube-linux-amd64 /usr/bin/minikube
+
+#installing conntrack 
+sudo apt install conntrack -y
+
+#installing dockerhim  /cri-dockerd
+
+git clone https://github.com/Mirantis/cri-dockerd.git
+
+wget https://storage.googleapis.com/golang/getgo/installer_linux
+chmod +x ./installer_linux
+./installer_linux
+source ~/.bash_profile
+
+cd cri-dockerd
+mkdir bin
+go build -o bin/cri-dockerd
+mkdir -p /usr/local/bin
+install -o root -g root -m 0755 bin/cri-dockerd /usr/local/bin/cri-dockerd
+cp -a packaging/systemd/* /etc/systemd/system
+sed -i -e 's,/usr/bin/cri-dockerd,/usr/local/bin/cri-dockerd,' /etc/systemd/system/cri-docker.service
+systemctl daemon-reload
+systemctl enable cri-docker.service
+systemctl enable --now cri-docker.socket
+
+
+#instlling crictl 
+
+VERSION="v1.26.0" # check latest version in /releases page
+curl -L https://github.com/kubernetes-sigs/cri-tools/releases/download/v1.26.0/crictl-v1.26.0-linux-amd64.tar.gz --output 
+wget https://github.com/kubernetes-sigs/cri-tools/releases/download/v1.26.0/crictl-v1.26.0-linux-amd64.tar.gz
+sudo tar zxvf crictl-v1.26.0-linux-amd64.tar.gz -C /usr/local/bin
+rm -f crictl-v1.26.0-linux-amd64.tar.gz
+
+minikube start --vm-driver=none  (this command means everything is running in same vm)
+
+(if still cluster is not ready after 5 min , execute below command for network creation for internel cluster)
+
+kubectl apply -f https://docs.projectcalico.org/manifests/calico-typha.yaml 
+
+kubectl get nodes
+kubectl get pods
+kubectl create deploy mydeploy --image=nginx:latest
+kubectl expose deploy mydeploy --type=NodePort --port=80
+kubectl get svc
+
+http://10.116.3.233:32064/  
+
+
+###################Please refer below links for best understand ##########################
+
+https://github.com/kunchalavikram1427/YouTube_Series/blob/main/Kubernetes/ClusterSetup/minikube-on-aws.md
+
+https://github.com/Mirantis/cri-dockerd#build-and-install
+
+https://github.com/kubernetes-sigs/cri-tools/blob/master/docs/crictl.md
+
+https://stackoverflow.com/questions/49112336/container-runtime-network-not-ready-cni-config-uninitialized
+
+
+
+
+
+
+
